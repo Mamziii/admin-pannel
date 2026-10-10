@@ -7,7 +7,6 @@ import {
   ShoppingCart,
   PlusCircle,
   Menu,
-  X,
   LogOut,
   ShieldCheck,
 } from "lucide-react";
