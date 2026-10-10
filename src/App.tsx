@@ -1,9 +1,11 @@
 import "./App.css";
+import routes from "./routes";
+import { useRoutes } from "react-router-dom";
 
 function App() {
-  return <>
-  <h2 className="text-gray-500">hello</h2>
-  </>;
+  const router = useRoutes(routes);
+
+  return <>{router}</>;
 }
 
 export default App;
