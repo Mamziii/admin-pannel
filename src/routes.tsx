@@ -2,6 +2,7 @@ import Home from "./pages/Home";
 import NavigateToLastRoute from "./pages/NavigateToLastRoute";
 import Pannel from "./pages/Pannel";
 import UsersList from "./pages/UsersList";
+import ProductsList from "./pages/ProductsList";
 
 const routes = [
   { path: "/", element: <Home /> },
@@ -11,7 +12,7 @@ const routes = [
     children: [
       { index: true, element: <NavigateToLastRoute /> },
       { path: "users-list", element: <UsersList /> },
-      //   { path: "products-list", element: <ProductsList /> },
+        { path: "products-list", element: <ProductsList /> },
       //   { path: "sales", element: <Sales /> },
       //   { path: "orders", element: <Orders /> },
       //   { path: "add-product", element: <AddProduct /> },

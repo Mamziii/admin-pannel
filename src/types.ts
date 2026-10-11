@@ -1,4 +1,4 @@
-export interface User {
+export type User = {
   id: number;
   email: string;
   password: string;
@@ -7,4 +7,21 @@ export interface User {
   username: string;
   gender: "male" | "female";
   role: "user" | "admin";
+}
+
+export type Product = {
+  id: number;
+  category: string;
+  title: string;
+  mainImage: string;
+  price: number;
+  desc: string;
+  images: string[];
+  colors: string[];
+  sizes: string[];
+  quantity: number;
+  rate: number;
+  discount: number;
+  date: string;
+  type: string;
 }
