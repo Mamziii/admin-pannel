@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useUsers } from "../hooks/useUsers";
+import { useUsers, useDeleteUser } from "../hooks/useUsers";
 import {
   Loader2,
   Users,
@@ -7,20 +7,44 @@ import {
   User as UserIcon,
   X,
   Eye,
+  Trash2,
 } from "lucide-react";
 import type { User } from "../types";
+import toast from "react-hot-toast";
 
 type GenderFilter = "all" | "male" | "female";
 
 export default function UsersList() {
   const { data: users, isLoading, isError, error } = useUsers();
+  const deleteUserMutation = useDeleteUser();
+
   const [genderFilter, setGenderFilter] = useState<GenderFilter>("all");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
   const filteredUsers = users?.filter((user) => {
     if (genderFilter === "all") return true;
     return user.gender === genderFilter;
   });
+
+  const handleDelete = () => {
+    if (!userToDelete) return;
+
+    deleteUserMutation.mutate(userToDelete.id, {
+      onSuccess: () => {
+        toast.success(
+          `کاربر ${userToDelete.firstName} ${userToDelete.lastName} با موفقیت حذف شد`
+        );
+        setUserToDelete(null);
+        if (selectedUser?.id === userToDelete.id) {
+          setSelectedUser(null);
+        }
+      },
+      onError: () => {
+        toast.error("خطا در حذف کاربر. لطفاً دوباره تلاش کنید.");
+      },
+    });
+  };
 
   if (isLoading) {
     return (
@@ -94,7 +118,7 @@ export default function UsersList() {
                 <th className="text-right py-4 px-5 font-medium hidden md:table-cell">ایمیل</th>
                 <th className="text-right py-4 px-5 font-medium hidden md:table-cell">جنسیت</th>
                 <th className="text-right py-4 px-5 font-medium hidden md:table-cell">نقش</th>
-                <th className="text-right py-4 px-4 font-medium md:hidden">جزئیات</th>
+                <th className="text-right py-4 px-4 font-medium">عملیات</th>
               </tr>
             </thead>
             <tbody>
@@ -123,19 +147,19 @@ export default function UsersList() {
                     @{user.username}
                   </td>
 
-                  {/* ایمیل - فقط دسکتاپ */}
+                  {/* ایمیل */}
                   <td className="py-4 px-5 text-slate-300 hidden md:table-cell">
                     {user.email}
                   </td>
 
-                  {/* جنسیت - فقط دسکتاپ */}
+                  {/* جنسیت */}
                   <td className="py-4 px-5 hidden md:table-cell">
                     <span className="text-slate-300">
                       {user.gender === "male" ? "مرد" : "زن"}
                     </span>
                   </td>
 
-                  {/* نقش - فقط دسکتاپ */}
+                  {/* نقش */}
                   <td className="py-4 px-5 hidden md:table-cell">
                     {user.role === "admin" ? (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-violet-500/20 text-violet-300 text-xs font-medium">
@@ -150,14 +174,26 @@ export default function UsersList() {
                     )}
                   </td>
 
-                  {/* دکمه جزئیات - فقط موبایل */}
-                  <td className="py-4 px-4 md:hidden">
-                    <button
-                      onClick={() => setSelectedUser(user)}
-                      className="p-2 rounded-lg bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 transition-colors"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
+                  {/* عملیات */}
+                  <td className="py-4 px-4">
+                    <div className="flex items-center gap-2">
+                      {/* جزئیات - فقط موبایل */}
+                      <button
+                        onClick={() => setSelectedUser(user)}
+                        className="p-2 rounded-lg bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 transition-colors md:hidden"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+
+                      {/* حذف - فقط تبلت و دسکتاپ */}
+                      <button
+                        onClick={() => setUserToDelete(user)}
+                        className="p-2 rounded-lg bg-red-500/15 text-red-400 hover:bg-red-500/25 transition-colors hidden md:inline-flex"
+                        title="حذف کاربر"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -175,15 +211,11 @@ export default function UsersList() {
       {/* ========== Modal جزئیات کاربر ========== */}
       {selectedUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Overlay */}
           <div
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             onClick={() => setSelectedUser(null)}
           />
-
-          {/* Modal Content */}
           <div className="relative w-full max-w-sm bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
-            {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-white/10">
               <h3 className="font-bold text-white">جزئیات کاربر</h3>
               <button
@@ -194,9 +226,7 @@ export default function UsersList() {
               </button>
             </div>
 
-            {/* Body */}
             <div className="p-5 space-y-5">
-              {/* Avatar + Name */}
               <div className="flex flex-col items-center gap-3">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-xl font-bold">
                   {selectedUser.firstName[0]}
@@ -210,7 +240,6 @@ export default function UsersList() {
                 </div>
               </div>
 
-              {/* Info List */}
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between items-center py-2 border-b border-white/5">
                   <span className="text-slate-400">ایمیل</span>
@@ -236,6 +265,69 @@ export default function UsersList() {
                     </span>
                   )}
                 </div>
+              </div>
+
+              {/* دکمه حذف فقط داخل مودال (برای موبایل) */}
+              <button
+                onClick={() => setUserToDelete(selectedUser)}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-red-500/15 text-red-400 hover:bg-red-500/25 transition-colors text-sm font-medium"
+              >
+                <Trash2 className="w-4 h-4" />
+                حذف این کاربر
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========== Modal تأیید حذف ========== */}
+      {userToDelete && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={() => setUserToDelete(null)}
+          />
+          <div className="relative w-full max-w-sm bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+            <div className="p-6 text-center space-y-5">
+              <div className="mx-auto w-14 h-14 rounded-full bg-red-500/15 flex items-center justify-center">
+                <Trash2 className="w-7 h-7 text-red-400" />
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-white mb-2">حذف کاربر</h3>
+                <p className="text-sm text-slate-400 leading-relaxed">
+                  آیا از حذف کاربر{" "}
+                  <span className="text-white font-medium">
+                    {userToDelete.firstName} {userToDelete.lastName}
+                  </span>{" "}
+                  مطمئن هستید؟
+                  <br />
+                  این عمل قابل بازگشت نیست.
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setUserToDelete(null)}
+                  disabled={deleteUserMutation.isPending}
+                  className="flex-1 py-2.5 rounded-xl bg-white/5 text-slate-300 hover:bg-white/10 transition-colors text-sm font-medium"
+                >
+                  انصراف
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleteUserMutation.isPending}
+                  className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                >
+                  {deleteUserMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      در حال حذف...
+                    </>
+                  ) : (
+                    "بله، حذف شود"
+                  )}
+                </button>
               </div>
             </div>
           </div>

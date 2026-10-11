@@ -1,14 +1,18 @@
 import { useState, useMemo } from "react";
-import { useProducts } from "../hooks/useProducts";
-import { Loader2, Package, X, Eye, Star, Tag } from "lucide-react";
+import { useProducts, useDeleteProduct } from "../hooks/useProducts";
+import { Loader2, Package, X, Eye, Star, Tag, Trash2 } from "lucide-react";
 import type { Product } from "../types";
+import toast from "react-hot-toast";
 
 type CategoryFilter = "all" | string;
 
 export default function ProductsList() {
   const { data: products, isLoading, isError, error } = useProducts();
+  const deleteProductMutation = useDeleteProduct();
+
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
   const categories = useMemo(() => {
     if (!products) return [];
@@ -22,6 +26,23 @@ export default function ProductsList() {
 
   const formatPrice = (price: number) =>
     price.toLocaleString("fa-IR") + " تومان";
+
+  const handleDelete = () => {
+    if (!productToDelete) return;
+
+    deleteProductMutation.mutate(productToDelete.id, {
+      onSuccess: () => {
+        toast.success(`محصول "${productToDelete.title}" با موفقیت حذف شد`);
+        setProductToDelete(null);
+        if (selectedProduct?.id === productToDelete.id) {
+          setSelectedProduct(null);
+        }
+      },
+      onError: () => {
+        toast.error("خطا در حذف محصول. لطفاً دوباره تلاش کنید.");
+      },
+    });
+  };
 
   if (isLoading) {
     return (
@@ -149,7 +170,6 @@ export default function ProductsList() {
                   key={product.id}
                   className="border-b border-white/5 hover:bg-white/5 transition-colors"
                 >
-                  {/* # - مخفی در موبایل */}
                   <td className="py-4 px-4 sm:px-5 text-slate-400 hidden sm:table-cell">
                     {index + 1}
                   </td>
@@ -157,7 +177,6 @@ export default function ProductsList() {
                   {/* محصول */}
                   <td className="py-4 px-4 sm:px-5">
                     <div className="flex items-center gap-3">
-                      {/* عکس فقط در تبلت و بالاتر */}
                       <img
                         src={product.mainImage}
                         alt={product.title}
@@ -167,7 +186,6 @@ export default function ProductsList() {
                         <p className="font-medium text-white truncate max-w-[200px] sm:max-w-[240px]">
                           {product.title}
                         </p>
-                        {/* در موبایل دسته‌بندی و قیمت زیر عنوان */}
                         <div className="sm:hidden mt-1 space-y-0.5">
                           <p className="text-xs text-slate-500">
                             {product.category}
@@ -177,7 +195,7 @@ export default function ProductsList() {
                     </div>
                   </td>
 
-                  {/* دسته‌بندی - دسکتاپ */}
+                  {/* دسته‌بندی */}
                   <td className="py-4 px-5 hidden md:table-cell">
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 text-slate-300 text-xs">
                       <Tag className="w-3.5 h-3.5" />
@@ -185,7 +203,7 @@ export default function ProductsList() {
                     </span>
                   </td>
 
-                  {/* قیمت - دسکتاپ */}
+                  {/* قیمت */}
                   <td className="py-4 px-5 text-white font-medium whitespace-nowrap hidden md:table-cell">
                     {formatPrice(product.price)}
                   </td>
@@ -213,7 +231,7 @@ export default function ProductsList() {
                     </div>
                   </td>
 
-                  {/* دکمه جزئیات (همه سایزها) */}
+                  {/* دکمه جزئیات */}
                   <td className="py-4 px-4 sm:px-5">
                     <button
                       onClick={() => setSelectedProduct(product)}
@@ -244,7 +262,7 @@ export default function ProductsList() {
             onClick={() => setSelectedProduct(null)}
           />
 
-          <div className="relative w-full max-w-md bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
+          <div className="relative w-full max-w-md bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden max-h-[95vh] overflow-y-auto">
             {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-white/10 sticky top-0 bg-slate-900 z-10">
               <h3 className="font-bold text-white">جزئیات محصول</h3>
@@ -261,7 +279,7 @@ export default function ProductsList() {
               <img
                 src={selectedProduct.mainImage}
                 alt={selectedProduct.title}
-                className="w-full h-52 object-cover rounded-xl bg-white/10"
+                className="w-full h-44 object-cover rounded-xl bg-white/10"
               />
 
               <div>
@@ -341,6 +359,69 @@ export default function ProductsList() {
                     ))}
                   </div>
                 </div>
+              </div>
+
+              {/* دکمه حذف داخل مودال */}
+              <button
+                onClick={() => setProductToDelete(selectedProduct)}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-red-500/15 text-red-400 hover:bg-red-500/25 transition-colors text-sm font-medium"
+              >
+                <Trash2 className="w-4 h-4" />
+                حذف این محصول
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========== Modal تأیید حذف ========== */}
+      {productToDelete && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={() => setProductToDelete(null)}
+          />
+          <div className="relative w-full max-w-sm bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+            <div className="p-6 text-center space-y-5">
+              <div className="mx-auto w-14 h-14 rounded-full bg-red-500/15 flex items-center justify-center">
+                <Trash2 className="w-7 h-7 text-red-400" />
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-white mb-2">حذف محصول</h3>
+                <p className="text-sm text-slate-400 leading-relaxed">
+                  آیا از حذف محصول{" "}
+                  <span className="text-white font-medium">
+                    "{productToDelete.title}"
+                  </span>{" "}
+                  مطمئن هستید؟
+                  <br />
+                  این عمل قابل بازگشت نیست.
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setProductToDelete(null)}
+                  disabled={deleteProductMutation.isPending}
+                  className="flex-1 py-2.5 rounded-xl bg-white/5 text-slate-300 hover:bg-white/10 transition-colors text-sm font-medium"
+                >
+                  انصراف
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleteProductMutation.isPending}
+                  className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                >
+                  {deleteProductMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      در حال حذف...
+                    </>
+                  ) : (
+                    "بله، حذف شود"
+                  )}
+                </button>
               </div>
             </div>
           </div>
