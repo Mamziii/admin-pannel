@@ -25,3 +25,31 @@ export type Product = {
   date: string;
   type: string;
 }
+
+export type OrderItem = {
+  productID: number;
+  title: string;
+  price: number;
+  mainImage: string;
+  category: string;
+  discount: number;
+  type: string;
+  color: string;
+  size: string;
+  quantity: number;
+  userID: number;
+  id: number;
+}
+
+export type Order = {
+  id: number;
+  userID: number;
+  userName: string;
+  userFirstname: string;
+  userLastname: string;
+  items: OrderItem[];
+  allPrice: number;
+  address: string;
+  phone: string;
+  date: string;
+}

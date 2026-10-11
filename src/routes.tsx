@@ -3,6 +3,7 @@ import NavigateToLastRoute from "./pages/NavigateToLastRoute";
 import Pannel from "./pages/Pannel";
 import UsersList from "./pages/UsersList";
 import ProductsList from "./pages/ProductsList";
+import Orders from "./pages/Orders";
 
 const routes = [
   { path: "/", element: <Home /> },
@@ -14,7 +15,7 @@ const routes = [
       { path: "users-list", element: <UsersList /> },
         { path: "products-list", element: <ProductsList /> },
       //   { path: "sales", element: <Sales /> },
-      //   { path: "orders", element: <Orders /> },
+        { path: "orders", element: <Orders /> },
       //   { path: "add-product", element: <AddProduct /> },
     ],
   },
