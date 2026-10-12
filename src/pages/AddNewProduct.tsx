@@ -12,7 +12,7 @@ import {
   X,
 } from "lucide-react";
 
-// کلید API خودت را از داشبورد imghosting.in بگیر و اینجا بگذار
+
 const IMGHOSTING_API_KEY = "sk_live_r9fc88smp3da6p5lo9k2k";
 
 export default function AddNewProduct() {

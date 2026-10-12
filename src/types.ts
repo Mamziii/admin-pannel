@@ -53,3 +53,11 @@ export type Order = {
   phone: string;
   date: string;
 }
+
+export type SalesData = {
+  id: number;
+  name: string;
+  inStore: number;
+  online: number;
+  year: number;
+}
