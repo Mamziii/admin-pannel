@@ -87,52 +87,22 @@ export default function ProductsList() {
         </div>
 
         {/* Category Filter */}
-        <div className="w-full sm:w-auto">
-          {/* Mobile Select */}
-          <div className="sm:hidden">
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 text-white text-sm rounded-xl px-4 py-2.5 outline-none focus:border-indigo-500 transition-colors"
-            >
-              <option value="all" className="bg-slate-900">
-                همه دسته‌بندی‌ها
-              </option>
-              {categories.map((cat) => (
-                <option key={cat} value={cat} className="bg-slate-900">
-                  {cat}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Desktop Buttons */}
-          <div className="hidden sm:flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl p-1 overflow-x-auto">
-            <button
-              onClick={() => setCategoryFilter("all")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                categoryFilter === "all"
-                  ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/30"
-                  : "text-slate-400 hover:text-white hover:bg-white/5"
-              }`}
-            >
-              همه
-            </button>
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setCategoryFilter(cat)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                  categoryFilter === cat
-                    ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/30"
-                    : "text-slate-400 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-        </div>
+       <div className="w-full sm:w-auto sm:min-w-[200px]">
+  <select
+    value={categoryFilter}
+    onChange={(e) => setCategoryFilter(e.target.value)}
+    className="w-full bg-white/5 border border-white/10 text-white text-sm rounded-xl px-4 py-2.5 outline-none focus:border-indigo-500 transition-colors"
+  >
+    <option value="all" className="bg-slate-900">
+      همه دسته‌بندی‌ها
+    </option>
+    {categories.map((cat) => (
+      <option key={cat} value={cat} className="bg-slate-900">
+        {cat}
+      </option>
+    ))}
+  </select>
+</div>
       </div>
 
       {/* Table */}

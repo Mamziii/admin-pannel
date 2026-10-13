@@ -12,8 +12,26 @@ import {
   X,
 } from "lucide-react";
 
+const API_BASE = "http://localhost:4000";
 
-const IMGHOSTING_API_KEY = "sk_live_r9fc88smp3da6p5lo9k2k";
+const COLOR_OPTIONS = [
+  { name: "مشکی", value: "#000000" },
+  { name: "سفید", value: "#FFFFFF" },
+  { name: "خاکستری", value: "#9CA3AF" },
+  { name: "قرمز", value: "#EF4444" },
+  { name: "آبی", value: "#3B82F6" },
+  { name: "سبز", value: "#22C55E" },
+  { name: "زرد", value: "#EAB308" },
+  { name: "نارنجی", value: "#F97316" },
+  { name: "بنفش", value: "#A855F7" },
+  { name: "صورتی", value: "#EC4899" },
+  { name: "قهوه‌ای", value: "#92400E" },
+  { name: "بژ", value: "#D4C4A8" },
+  { name: "زیتونی", value: "#8F9E7E" },
+  { name: "کرم", value: "#FFFDD0" },
+];
+
+const SIZE_OPTIONS = ["M", "L", "XL", "2XL", "3XL"];
 
 export default function AddNewProduct() {
   const {
@@ -21,6 +39,7 @@ export default function AddNewProduct() {
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<AddNewProductFormType>({
     mode: "onChange",
@@ -36,6 +55,41 @@ export default function AddNewProduct() {
     setExtraImagesPreview([]);
   });
 
+  const selectedColors = (watch("colors") || "")
+    .split(",")
+    .map((c) => c.trim())
+    .filter(Boolean);
+
+  const selectedSizes = (watch("sizes") || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  // آپلود به سرور خودت
+  const uploadToServer = async (file: File): Promise<string | null> => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch(`${API_BASE}/upload`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (data.success && data.data?.url) {
+        return data.data.url;
+      }
+
+      console.error("Upload failed:", data);
+      return null;
+    } catch (error) {
+      console.error("Upload error:", error);
+      return null;
+    }
+  };
+
   // آپلود عکس اصلی
   const handleMainImageUpload = async (
     e: React.ChangeEvent<HTMLInputElement>
@@ -44,7 +98,7 @@ export default function AddNewProduct() {
     if (!file) return;
 
     setUploading(true);
-    const url = await uploadToImgHosting(file);
+    const url = await uploadToServer(file);
     if (url) {
       setValue("mainImage", url, { shouldValidate: true });
       setMainImagePreview(url);
@@ -63,7 +117,7 @@ export default function AddNewProduct() {
     const urls: string[] = [];
 
     for (let i = 0; i < files.length; i++) {
-      const url = await uploadToImgHosting(files[i]);
+      const url = await uploadToServer(files[i]);
       if (url) urls.push(url);
     }
 
@@ -77,34 +131,6 @@ export default function AddNewProduct() {
     const newPreviews = extraImagesPreview.filter((_, i) => i !== index);
     setExtraImagesPreview(newPreviews);
     setValue("images", newPreviews.join(", "));
-  };
-
-  // آپلود به imghosting.in
-  const uploadToImgHosting = async (file: File): Promise<string | null> => {
-    const formData = new FormData();
-    formData.append("file", file); // اسم فیلد باید "file" باشد
-
-    try {
-      const res = await fetch("https://api.imghosting.in/upload", {
-        method: "POST",
-        headers: {
-          "X-Free-API-Key": IMGHOSTING_API_KEY,
-        },
-        body: formData,
-      });
-
-      const data = await res.json();
-
-      if (data.success && data.data?.url) {
-        return data.data.url;
-      }
-
-      console.error("Upload failed:", data);
-      return null;
-    } catch (error) {
-      console.error("Upload error:", error);
-      return null;
-    }
   };
 
   const inputClass =
@@ -271,48 +297,6 @@ export default function AddNewProduct() {
               )}
             </div>
 
-            {/* رنگ‌ها */}
-            <div>
-              <label htmlFor="colors" className={labelClass}>
-                رنگ‌های محصول
-              </label>
-              <input
-                {...register("colors", {
-                  required: "وارد کردن رنگ‌ها اجباری است",
-                })}
-                type="text"
-                id="colors"
-                placeholder="مثلاً: #8F9E7E, #FFFDD0, #FAF3E0"
-                className={inputClass}
-              />
-              {errors.colors && (
-                <p className="text-red-400 text-xs mt-1.5">
-                  {errors.colors.message}
-                </p>
-              )}
-            </div>
-
-            {/* سایزها */}
-            <div>
-              <label htmlFor="sizes" className={labelClass}>
-                سایزهای محصول
-              </label>
-              <input
-                {...register("sizes", {
-                  required: "وارد کردن سایزها اجباری است",
-                })}
-                type="text"
-                id="sizes"
-                placeholder="مثلاً: M, L, XL"
-                className={inputClass}
-              />
-              {errors.sizes && (
-                <p className="text-red-400 text-xs mt-1.5">
-                  {errors.sizes.message}
-                </p>
-              )}
-            </div>
-
             {/* تاریخ */}
             <div>
               <label htmlFor="date" className={labelClass}>
@@ -348,7 +332,99 @@ export default function AddNewProduct() {
             </div>
           </div>
 
-          {/* توضیحات - تمام عرض */}
+          {/* رنگ‌ها */}
+          <div>
+            <label className={labelClass}>رنگ‌های محصول</label>
+            <div className="flex flex-wrap gap-2.5">
+              {COLOR_OPTIONS.map((color) => {
+                const isSelected = selectedColors.includes(color.value);
+
+                return (
+                  <button
+                    key={color.value}
+                    type="button"
+                    title={color.name}
+                    onClick={() => {
+                      const next = isSelected
+                        ? selectedColors.filter((c) => c !== color.value)
+                        : [...selectedColors, color.value];
+                      setValue("colors", next.join(", "), {
+                        shouldValidate: true,
+                      });
+                    }}
+                    className={`relative w-9 h-9 rounded-full border-2 transition-all ${
+                      isSelected
+                        ? "border-indigo-400 scale-110 shadow-lg shadow-indigo-500/30"
+                        : "border-white/20 hover:border-white/40"
+                    }`}
+                    style={{ backgroundColor: color.value }}
+                  >
+                    {isSelected && (
+                      <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-bold drop-shadow">
+                        ✓
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            <input
+              type="hidden"
+              {...register("colors", {
+                required: "انتخاب حداقل یک رنگ اجباری است",
+              })}
+            />
+            {errors.colors && (
+              <p className="text-red-400 text-xs mt-1.5">
+                {errors.colors.message}
+              </p>
+            )}
+          </div>
+
+          {/* سایزها */}
+          <div>
+            <label className={labelClass}>سایزهای محصول</label>
+            <div className="flex flex-wrap gap-2">
+              {SIZE_OPTIONS.map((size) => {
+                const isSelected = selectedSizes.includes(size);
+
+                return (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => {
+                      const next = isSelected
+                        ? selectedSizes.filter((s) => s !== size)
+                        : [...selectedSizes, size];
+                      setValue("sizes", next.join(", "), {
+                        shouldValidate: true,
+                      });
+                    }}
+                    className={`min-w-[48px] px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+                      isSelected
+                        ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/30"
+                        : "bg-white/5 text-slate-400 border border-white/10 hover:text-white hover:bg-white/10"
+                    }`}
+                  >
+                    {size}
+                  </button>
+                );
+              })}
+            </div>
+            <input
+              type="hidden"
+              {...register("sizes", {
+                required: "انتخاب حداقل یک سایز اجباری است",
+              })}
+            />
+            {errors.sizes && (
+              <p className="text-red-400 text-xs mt-1.5">
+                {errors.sizes.message}
+              </p>
+            )}
+          </div>
+
+          {/* توضیحات */}
           <div>
             <label htmlFor="desc" className={labelClass}>
               توضیحات محصول
