@@ -78,7 +78,7 @@ export default function Pannel() {
           ))}
         </nav>
 
-        {/* Logout / Footer */}
+        {/* Logout / Footer (سایدبار - مثل قبل) */}
         <div className="px-4 py-5 border-t border-white/10">
           <button
             onClick={() => navigate("/")}
@@ -108,6 +108,28 @@ export default function Pannel() {
             <Menu className="w-6 h-6" />
           </button>
         </header>
+
+        {/* Top bar بالای محتوا (دسکتاپ + موبایل) */}
+        <div className="sticky top-0 z-20 hidden lg:flex items-center justify-end px-6 lg:px-8 py-3 border-b border-white/10 bg-slate-900/60 backdrop-blur-xl">
+          <button
+            onClick={() => navigate("/")}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-all"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>خروج از پنل</span>
+          </button>
+        </div>
+
+        {/* نسخه موبایل دکمه خروج بالای محتوا */}
+        <div className="lg:hidden flex items-center justify-end px-4 pt-3">
+          <button
+            onClick={() => navigate("/")}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-all"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>خروج</span>
+          </button>
+        </div>
 
         {/* Content Area */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
