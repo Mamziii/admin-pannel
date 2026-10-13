@@ -1,4 +1,3 @@
-// src/hooks/useProducts.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import type { Product } from "../types";
@@ -21,6 +20,20 @@ export const useDeleteProduct = () => {
   return useMutation({
     mutationFn: async (productId: number) => {
       await axios.delete(`${API_URL}/${productId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+  });
+};
+
+export const useUpdateProduct = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (product: Product) => {
+      const { data } = await axios.put(`${API_URL}/${product.id}`, product);
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
