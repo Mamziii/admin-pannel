@@ -159,8 +159,8 @@ export default function Sale() {
                   value >= 1000000
                     ? `${(value / 1000000).toFixed(0)}M`
                     : value >= 1000
-                    ? `${(value / 1000).toFixed(0)}K`
-                    : String(value)
+                      ? `${(value / 1000).toFixed(0)}K`
+                      : String(value)
                 }
                 tick={{ fill: "#94a3b8", fontSize: 11 }}
                 axisLine={false}
@@ -175,7 +175,7 @@ export default function Sale() {
                   color: "#fff",
                   fontSize: 12,
                 }}
-                formatter={(value: number) => [
+                formatter={(value) => [
                   `${Number(value).toLocaleString("fa-IR")} تومان`,
                 ]}
               />
@@ -184,7 +184,11 @@ export default function Sale() {
                 align="center"
                 iconType="circle"
                 iconSize={8}
-                wrapperStyle={{ paddingBottom: 8, fontSize: 12, color: "#94a3b8" }}
+                wrapperStyle={{
+                  paddingBottom: 8,
+                  fontSize: 12,
+                  color: "#94a3b8",
+                }}
               />
               <Bar
                 dataKey="online"
@@ -235,8 +239,8 @@ export default function Sale() {
                   value >= 1000000
                     ? `${(value / 1000000).toFixed(0)}M`
                     : value >= 1000
-                    ? `${(value / 1000).toFixed(0)}K`
-                    : String(value)
+                      ? `${(value / 1000).toFixed(0)}K`
+                      : String(value)
                 }
                 tick={{ fill: "#94a3b8", fontSize: 12 }}
                 axisLine={{ stroke: "rgba(255,255,255,0.1)" }}
@@ -249,7 +253,7 @@ export default function Sale() {
                   borderRadius: "12px",
                   color: "#fff",
                 }}
-                formatter={(value: number) => [
+                formatter={(value) => [
                   `${Number(value).toLocaleString("fa-IR")} تومان`,
                 ]}
                 labelStyle={{ fontWeight: "bold", marginBottom: 4 }}
