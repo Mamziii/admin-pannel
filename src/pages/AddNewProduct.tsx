@@ -4,6 +4,7 @@ import {
   useAddNewProduct,
   type AddNewProductFormType,
 } from "../hooks/useAddNewProduct";
+import { useUploadImage, useUploadImages } from "../hooks/useUploadImage";
 import {
   PlusCircle,
   Upload,
@@ -11,8 +12,6 @@ import {
   Image as ImageIcon,
   X,
 } from "lucide-react";
-
-const API_BASE = "http://localhost:4000";
 
 const COLOR_OPTIONS = [
   { name: "مشکی", value: "#000000" },
@@ -41,11 +40,8 @@ export default function AddNewProduct() {
     setValue,
     watch,
     formState: { errors },
-  } = useForm<AddNewProductFormType>({
-    mode: "onChange",
-  });
+  } = useForm<AddNewProductFormType>({ mode: "onChange" });
 
-  const [uploading, setUploading] = useState(false);
   const [mainImagePreview, setMainImagePreview] = useState<string | null>(null);
   const [extraImagesPreview, setExtraImagesPreview] = useState<string[]>([]);
 
@@ -54,6 +50,11 @@ export default function AddNewProduct() {
     setMainImagePreview(null);
     setExtraImagesPreview([]);
   });
+
+  const uploadImage = useUploadImage();
+  const uploadImages = useUploadImages();
+
+  const isUploading = uploadImage.isPending || uploadImages.isPending;
 
   const selectedColors = (watch("colors") || "")
     .split(",")
@@ -65,82 +66,60 @@ export default function AddNewProduct() {
     .map((s) => s.trim())
     .filter(Boolean);
 
-  // آپلود به سرور خودت
-  const uploadToServer = async (file: File): Promise<string | null> => {
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      const res = await fetch(`${API_BASE}/upload`, {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-
-      if (data.success && data.data?.url) {
-        return data.data.url;
-      }
-
-      console.error("Upload failed:", data);
-      return null;
-    } catch (error) {
-      console.error("Upload error:", error);
-      return null;
-    }
-  };
-
-  // آپلود عکس اصلی
   const handleMainImageUpload = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setUploading(true);
-    const url = await uploadToServer(file);
-    if (url) {
-      setValue("mainImage", url, { shouldValidate: true });
-      setMainImagePreview(url);
-    }
-    setUploading(false);
+    uploadImage.mutate(file, {
+      onSuccess: (url) => {
+        setValue("mainImage", url, { shouldValidate: true });
+        setMainImagePreview(url);
+      },
+    });
   };
 
-  // آپلود عکس‌های اضافی
   const handleExtraImagesUpload = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const files = e.target.files;
-    if (!files || files.length === 0) return;
+    if (!files?.length) return;
 
-    setUploading(true);
-    const urls: string[] = [];
-
-    for (let i = 0; i < files.length; i++) {
-      const url = await uploadToServer(files[i]);
-      if (url) urls.push(url);
-    }
-
-    setValue("images", urls.join(", "), { shouldValidate: true });
-    setExtraImagesPreview(urls);
-    setUploading(false);
+    uploadImages.mutate(Array.from(files), {
+      onSuccess: (urls) => {
+        setValue("images", urls.join(", "), { shouldValidate: true });
+        setExtraImagesPreview(urls);
+      },
+    });
   };
 
-  // حذف عکس اضافی
   const removeExtraImage = (index: number) => {
-    const newPreviews = extraImagesPreview.filter((_, i) => i !== index);
-    setExtraImagesPreview(newPreviews);
-    setValue("images", newPreviews.join(", "));
+    const next = extraImagesPreview.filter((_, i) => i !== index);
+    setExtraImagesPreview(next);
+    setValue("images", next.join(", "));
+  };
+
+  const toggleColor = (value: string) => {
+    const next = selectedColors.includes(value)
+      ? selectedColors.filter((c) => c !== value)
+      : [...selectedColors, value];
+    setValue("colors", next.join(", "), { shouldValidate: true });
+  };
+
+  const toggleSize = (size: string) => {
+    const next = selectedSizes.includes(size)
+      ? selectedSizes.filter((s) => s !== size)
+      : [...selectedSizes, size];
+    setValue("sizes", next.join(", "), { shouldValidate: true });
   };
 
   const inputClass =
     "w-full bg-white/5 border border-white/10 text-white text-sm rounded-xl px-4 py-3 outline-none focus:border-indigo-500 transition-colors placeholder:text-slate-500";
-
   const labelClass = "block text-sm font-medium text-slate-300 mb-2";
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center">
           <PlusCircle className="w-5 h-5 text-indigo-400" />
@@ -151,11 +130,9 @@ export default function AddNewProduct() {
         </div>
       </div>
 
-      {/* Form Card */}
       <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 sm:p-8">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* دسته‌بندی */}
             <div>
               <label htmlFor="category" className={labelClass}>
                 دسته‌بندی محصول
@@ -164,7 +141,6 @@ export default function AddNewProduct() {
                 {...register("category", {
                   required: "وارد کردن دسته‌بندی اجباری است",
                 })}
-                type="text"
                 id="category"
                 placeholder="مثلاً: پیراهن"
                 className={inputClass}
@@ -176,7 +152,6 @@ export default function AddNewProduct() {
               )}
             </div>
 
-            {/* عنوان */}
             <div>
               <label htmlFor="title" className={labelClass}>
                 عنوان محصول
@@ -185,7 +160,6 @@ export default function AddNewProduct() {
                 {...register("title", {
                   required: "وارد کردن عنوان محصول اجباری است",
                 })}
-                type="text"
                 id="title"
                 placeholder="مثلاً: پیراهن کبریتی 92320"
                 className={inputClass}
@@ -197,7 +171,6 @@ export default function AddNewProduct() {
               )}
             </div>
 
-            {/* قیمت */}
             <div>
               <label htmlFor="price" className={labelClass}>
                 قیمت (تومان)
@@ -205,12 +178,8 @@ export default function AddNewProduct() {
               <input
                 {...register("price", {
                   required: "وارد کردن قیمت اجباری است",
-                  pattern: {
-                    value: /^\d+$/,
-                    message: "فقط عدد وارد کنید",
-                  },
+                  pattern: { value: /^\d+$/, message: "فقط عدد وارد کنید" },
                 })}
-                type="text"
                 id="price"
                 placeholder="مثلاً: 3520000"
                 className={inputClass}
@@ -222,7 +191,6 @@ export default function AddNewProduct() {
               )}
             </div>
 
-            {/* تعداد */}
             <div>
               <label htmlFor="quantity" className={labelClass}>
                 تعداد موجودی
@@ -230,12 +198,8 @@ export default function AddNewProduct() {
               <input
                 {...register("quantity", {
                   required: "وارد کردن تعداد اجباری است",
-                  pattern: {
-                    value: /^\d+$/,
-                    message: "فقط عدد وارد کنید",
-                  },
+                  pattern: { value: /^\d+$/, message: "فقط عدد وارد کنید" },
                 })}
-                type="text"
                 id="quantity"
                 placeholder="مثلاً: 54"
                 className={inputClass}
@@ -247,7 +211,6 @@ export default function AddNewProduct() {
               )}
             </div>
 
-            {/* امتیاز */}
             <div>
               <label htmlFor="rate" className={labelClass}>
                 امتیاز (از ۵)
@@ -260,7 +223,6 @@ export default function AddNewProduct() {
                     message: "مثلاً: ۳.۵",
                   },
                 })}
-                type="text"
                 id="rate"
                 placeholder="مثلاً: 3.5"
                 className={inputClass}
@@ -272,7 +234,6 @@ export default function AddNewProduct() {
               )}
             </div>
 
-            {/* تخفیف */}
             <div>
               <label htmlFor="discount" className={labelClass}>
                 درصد تخفیف
@@ -280,12 +241,8 @@ export default function AddNewProduct() {
               <input
                 {...register("discount", {
                   required: "وارد کردن تخفیف اجباری است",
-                  pattern: {
-                    value: /^\d+$/,
-                    message: "فقط عدد وارد کنید",
-                  },
+                  pattern: { value: /^\d+$/, message: "فقط عدد وارد کنید" },
                 })}
-                type="text"
                 id="discount"
                 placeholder="مثلاً: 10 (اگر ندارد 0 بگذارید)"
                 className={inputClass}
@@ -297,7 +254,6 @@ export default function AddNewProduct() {
               )}
             </div>
 
-            {/* تاریخ */}
             <div>
               <label htmlFor="date" className={labelClass}>
                 تاریخ افزودن
@@ -317,14 +273,12 @@ export default function AddNewProduct() {
               )}
             </div>
 
-            {/* نوع (اختیاری) */}
             <div>
               <label htmlFor="type" className={labelClass}>
                 نوع محصول (اختیاری)
               </label>
               <input
                 {...register("type")}
-                type="text"
                 id="type"
                 placeholder="مثلاً: bag"
                 className={inputClass}
@@ -338,20 +292,12 @@ export default function AddNewProduct() {
             <div className="flex flex-wrap gap-2.5">
               {COLOR_OPTIONS.map((color) => {
                 const isSelected = selectedColors.includes(color.value);
-
                 return (
                   <button
                     key={color.value}
                     type="button"
                     title={color.name}
-                    onClick={() => {
-                      const next = isSelected
-                        ? selectedColors.filter((c) => c !== color.value)
-                        : [...selectedColors, color.value];
-                      setValue("colors", next.join(", "), {
-                        shouldValidate: true,
-                      });
-                    }}
+                    onClick={() => toggleColor(color.value)}
                     className={`relative w-9 h-9 rounded-full border-2 transition-all ${
                       isSelected
                         ? "border-indigo-400 scale-110 shadow-lg shadow-indigo-500/30"
@@ -387,19 +333,11 @@ export default function AddNewProduct() {
             <div className="flex flex-wrap gap-2">
               {SIZE_OPTIONS.map((size) => {
                 const isSelected = selectedSizes.includes(size);
-
                 return (
                   <button
                     key={size}
                     type="button"
-                    onClick={() => {
-                      const next = isSelected
-                        ? selectedSizes.filter((s) => s !== size)
-                        : [...selectedSizes, size];
-                      setValue("sizes", next.join(", "), {
-                        shouldValidate: true,
-                      });
-                    }}
+                    onClick={() => toggleSize(size)}
                     className={`min-w-[48px] px-3 py-2 rounded-xl text-sm font-medium transition-all ${
                       isSelected
                         ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/30"
@@ -445,26 +383,26 @@ export default function AddNewProduct() {
             )}
           </div>
 
-          {/* آپلود عکس اصلی */}
+          {/* عکس اصلی */}
           <div>
             <label className={labelClass}>عکس اصلی محصول</label>
             <div className="flex flex-col sm:flex-row gap-4 items-start">
               <label className="flex flex-col items-center justify-center w-full sm:w-48 h-36 border-2 border-dashed border-white/15 rounded-xl cursor-pointer hover:border-indigo-500/50 hover:bg-white/5 transition-all">
                 <div className="flex flex-col items-center gap-2 text-slate-400">
-                  {uploading ? (
+                  {isUploading ? (
                     <Loader2 className="w-6 h-6 animate-spin text-indigo-400" />
                   ) : (
                     <Upload className="w-6 h-6" />
                   )}
                   <span className="text-xs">
-                    {uploading ? "در حال آپلود..." : "انتخاب عکس"}
+                    {isUploading ? "در حال آپلود..." : "انتخاب عکس"}
                   </span>
                 </div>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleMainImageUpload}
-                  disabled={uploading}
+                  disabled={isUploading}
                   className="hidden"
                 />
               </label>
@@ -500,18 +438,18 @@ export default function AddNewProduct() {
             )}
           </div>
 
-          {/* آپلود عکس‌های اضافی */}
+          {/* تصاویر اضافی */}
           <div>
             <label className={labelClass}>تصاویر اضافی (چندتایی)</label>
             <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-white/15 rounded-xl cursor-pointer hover:border-indigo-500/50 hover:bg-white/5 transition-all">
               <div className="flex flex-col items-center gap-2 text-slate-400">
-                {uploading ? (
+                {isUploading ? (
                   <Loader2 className="w-5 h-5 animate-spin text-indigo-400" />
                 ) : (
                   <ImageIcon className="w-5 h-5" />
                 )}
                 <span className="text-xs">
-                  {uploading ? "در حال آپلود..." : "انتخاب چند عکس"}
+                  {isUploading ? "در حال آپلود..." : "انتخاب چند عکس"}
                 </span>
               </div>
               <input
@@ -519,7 +457,7 @@ export default function AddNewProduct() {
                 accept="image/*"
                 multiple
                 onChange={handleExtraImagesUpload}
-                disabled={uploading}
+                disabled={isUploading}
                 className="hidden"
               />
             </label>
@@ -527,7 +465,7 @@ export default function AddNewProduct() {
             {extraImagesPreview.length > 0 && (
               <div className="flex flex-wrap gap-3 mt-4">
                 {extraImagesPreview.map((url, i) => (
-                  <div key={i} className="relative">
+                  <div key={url} className="relative">
                     <img
                       src={url}
                       alt={`پیش‌نمایش ${i + 1}`}
@@ -547,11 +485,10 @@ export default function AddNewProduct() {
             <input type="hidden" {...register("images")} />
           </div>
 
-          {/* دکمه ثبت */}
           <div className="pt-2">
             <button
               type="submit"
-              disabled={mutation.isPending || uploading}
+              disabled={mutation.isPending || isUploading}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5
                          bg-gradient-to-r from-indigo-500 to-violet-600
                          hover:from-indigo-400 hover:to-violet-500
@@ -560,7 +497,7 @@ export default function AddNewProduct() {
                          shadow-lg shadow-indigo-500/30
                          transition-all duration-300"
             >
-              {mutation.isPending || uploading ? (
+              {mutation.isPending || isUploading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
                   در حال ارسال...
