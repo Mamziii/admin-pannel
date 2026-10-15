@@ -2,8 +2,9 @@
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { API_URL } from "../config/api";
 
-const API_BASE = "http://localhost:4000";
+const API_BASE = `${API_URL}`;
 
 const uploadFile = async (file: File): Promise<string> => {
   const formData = new FormData();

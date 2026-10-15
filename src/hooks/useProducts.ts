@@ -1,14 +1,15 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import type { Product } from "../types";
+import { API_URL } from "../config/api";
 
-const API_URL = "http://localhost:4000/products";
+const api_url = `${API_URL}/products`;
 
 export const useProducts = () => {
   return useQuery<Product[]>({
     queryKey: ["products"],
     queryFn: async () => {
-      const { data } = await axios.get<Product[]>(API_URL);
+      const { data } = await axios.get<Product[]>(api_url);
       return data;
     },
   });
@@ -19,7 +20,7 @@ export const useDeleteProduct = () => {
 
   return useMutation({
     mutationFn: async (productId: number) => {
-      await axios.delete(`${API_URL}/${productId}`);
+      await axios.delete(`${api_url}/${productId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
@@ -32,7 +33,7 @@ export const useUpdateProduct = () => {
 
   return useMutation({
     mutationFn: async (product: Product) => {
-      const { data } = await axios.put(`${API_URL}/${product.id}`, product);
+      const { data } = await axios.put(`${api_url}/${product.id}`, product);
       return data;
     },
     onSuccess: () => {

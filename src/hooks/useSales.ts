@@ -1,6 +1,7 @@
 // src/hooks/useSales.ts
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { API_URL } from "../config/api";
 
 export interface SalesData {
   year: number;
@@ -9,13 +10,13 @@ export interface SalesData {
   inStore: number;
 }
 
-const API_URL = "http://localhost:4000/sales";
+const api_url = `${API_URL}/sales`;
 
 export const useSales = () => {
   return useQuery<SalesData[]>({
     queryKey: ["sales"],
     queryFn: async () => {
-      const { data } = await axios.get<SalesData[]>(API_URL);
+      const { data } = await axios.get<SalesData[]>(api_url);
       return data;
     },
     staleTime: 1000 * 60 * 5, // ۵ دقیقه

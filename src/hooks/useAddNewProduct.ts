@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import toast from "react-hot-toast";
 import type { UseFormReset } from "react-hook-form";
+import { API_URL } from "../config/api";
 
 export interface AddNewProductFormType {
   category: string;
@@ -20,7 +21,7 @@ export interface AddNewProductFormType {
   type?: string;
 }
 
-const API_URL = "http://localhost:4000/products";
+const api_url = `${API_URL}/products`;
 
 export const useAddNewProduct = (reset: UseFormReset<AddNewProductFormType>) => {
   const queryClient = useQueryClient();
@@ -52,7 +53,7 @@ export const useAddNewProduct = (reset: UseFormReset<AddNewProductFormType>) => 
         type: data.type?.trim() || "",
       };
 
-      const res = await axios.post(API_URL, payload);
+      const res = await axios.post(api_url, payload);
       return res.data;
     },
     onSuccess: () => {

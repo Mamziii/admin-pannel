@@ -2,15 +2,16 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import type { Order } from "../types";
+import { API_URL } from "../config/api";
 
 
-const API_URL = "http://localhost:4000/orders";
+const api_url = `${API_URL}/orders`;
 
 export const useOrders = () => {
   return useQuery<Order[]>({
     queryKey: ["orders"],
     queryFn: async () => {
-      const { data } = await axios.get<Order[]>(API_URL);
+      const { data } = await axios.get<Order[]>(api_url);
       return data;
     },
   });
