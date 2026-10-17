@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import {
   useAddNewProduct,
   type AddNewProductFormType,
 } from "../hooks/useAddNewProduct";
 import { useUploadImage, useUploadImages } from "../hooks/useUploadImage";
+import { useProducts } from "../hooks/useProducts";
 import {
   PlusCircle,
   Upload,
@@ -44,17 +45,26 @@ export default function AddNewProduct() {
 
   const [mainImagePreview, setMainImagePreview] = useState<string | null>(null);
   const [extraImagesPreview, setExtraImagesPreview] = useState<string[]>([]);
+  const [isNewCategory, setIsNewCategory] = useState(false);
 
   const { onSubmit, mutation } = useAddNewProduct((values) => {
     reset(values);
     setMainImagePreview(null);
     setExtraImagesPreview([]);
+    setIsNewCategory(false);
   });
 
   const uploadImage = useUploadImage();
   const uploadImages = useUploadImages();
+  const { data: products } = useProducts();
 
   const isUploading = uploadImage.isPending || uploadImages.isPending;
+
+  // دسته‌بندی‌های موجود از لیست محصولات
+  const categories = useMemo(() => {
+    if (!products) return [];
+    return Array.from(new Set(products.map((p) => p.category))).filter(Boolean);
+  }, [products]);
 
   const selectedColors = (watch("colors") || "")
     .split(",")
@@ -114,6 +124,17 @@ export default function AddNewProduct() {
     setValue("sizes", next.join(", "), { shouldValidate: true });
   };
 
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    if (value === "__new__") {
+      setIsNewCategory(true);
+      setValue("category", "", { shouldValidate: true });
+    } else {
+      setIsNewCategory(false);
+      setValue("category", value, { shouldValidate: true });
+    }
+  };
+
   const inputClass =
     "w-full bg-white/5 border border-white/10 text-white text-sm rounded-xl px-4 py-3 outline-none focus:border-indigo-500 transition-colors placeholder:text-slate-500";
   const labelClass = "block text-sm font-medium text-slate-300 mb-2";
@@ -133,18 +154,50 @@ export default function AddNewProduct() {
       <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 sm:p-8">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* دسته‌بندی با select */}
             <div>
               <label htmlFor="category" className={labelClass}>
                 دسته‌بندی محصول
               </label>
-              <input
-                {...register("category", {
-                  required: "وارد کردن دسته‌بندی اجباری است",
-                })}
+              <select
                 id="category"
-                placeholder="مثلاً: پیراهن"
+                value={isNewCategory ? "__new__" : watch("category") || ""}
+                onChange={handleCategoryChange}
                 className={inputClass}
-              />
+              >
+                <option value="" className="bg-slate-900">
+                  انتخاب دسته‌بندی
+                </option>
+                {categories.map((cat) => (
+                  <option key={cat} value={cat} className="bg-slate-900">
+                    {cat}
+                  </option>
+                ))}
+                <option value="__new__" className="bg-slate-900">
+                  + دسته‌بندی جدید
+                </option>
+              </select>
+
+              {isNewCategory && (
+                <input
+                  {...register("category", {
+                    required: "وارد کردن دسته‌بندی اجباری است",
+                  })}
+                  id="category-new"
+                  placeholder="نام دسته‌بندی جدید را بنویسید..."
+                  className={`${inputClass} mt-2`}
+                />
+              )}
+
+              {!isNewCategory && (
+                <input
+                  type="hidden"
+                  {...register("category", {
+                    required: "انتخاب دسته‌بندی اجباری است",
+                  })}
+                />
+              )}
+
               {errors.category && (
                 <p className="text-red-400 text-xs mt-1.5">
                   {errors.category.message}
