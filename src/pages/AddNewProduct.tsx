@@ -31,7 +31,25 @@ const COLOR_OPTIONS = [
   { name: "کرم", value: "#FFFDD0" },
 ];
 
-const SIZE_OPTIONS = ["M", "L", "XL", "2XL", "3XL"];
+const SIZE_OPTIONS_BY_CATEGORY: Record<string, string[]> = {
+  پیراهن: ["M", "L", "XL", "2XL", "3XL"],
+  "هودی و سوییشرت": ["M", "L", "XL", "2XL"],
+  کاپشن: ["M", "L", "XL", "2XL"],
+  "تی شرت": ["M", "L", "XL", "2XL"],
+  "کت تک": ["M", "L", "XL", "2XL"],
+  "شلوار لی": ["36", "38", "40", "42"],
+  "شلوار پارچه ای": ["36", "38", "40", "42"],
+  شلوارک: ["38", "40", "42", "44"],
+  "کفش روزمره": ["40", "41", "42", "43"],
+  "کفش رسمی": ["40", "41", "42", "43"],
+  "بوت و نیم بوت": ["40", "41", "42", "43"],
+  کلاه: ["فیری سایز"],
+  "عطر و ادکلن": ["فیری سایز"],
+  کمربند: ["110", "115", "120", "125", "130"],
+};
+
+// سایز پیش‌فرض اگر دسته‌بندی جدید باشد
+const DEFAULT_SIZE_OPTIONS = ["M", "L", "XL", "2XL", "3XL"];
 
 export default function AddNewProduct() {
   const {
@@ -76,8 +94,15 @@ export default function AddNewProduct() {
     .map((s) => s.trim())
     .filter(Boolean);
 
+  const selectedCategory = watch("category") || "";
+
+  const availableSizes = useMemo(() => {
+    if (!selectedCategory) return DEFAULT_SIZE_OPTIONS;
+    return SIZE_OPTIONS_BY_CATEGORY[selectedCategory] || DEFAULT_SIZE_OPTIONS;
+  }, [selectedCategory]);
+
   const handleMainImageUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -91,7 +116,7 @@ export default function AddNewProduct() {
   };
 
   const handleExtraImagesUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const files = e.target.files;
     if (!files?.length) return;
@@ -380,28 +405,64 @@ export default function AddNewProduct() {
             )}
           </div>
 
-          {/* سایزها */}
+          {/* سایزها - متناسب با دسته‌بندی */}
           <div>
             <label className={labelClass}>سایزهای محصول</label>
-            <div className="flex flex-wrap gap-2">
-              {SIZE_OPTIONS.map((size) => {
-                const isSelected = selectedSizes.includes(size);
-                return (
-                  <button
-                    key={size}
-                    type="button"
-                    onClick={() => toggleSize(size)}
-                    className={`min-w-[48px] px-3 py-2 rounded-xl text-sm font-medium transition-all ${
-                      isSelected
-                        ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/30"
-                        : "bg-white/5 text-slate-400 border border-white/10 hover:text-white hover:bg-white/10"
-                    }`}
-                  >
-                    {size}
-                  </button>
-                );
-              })}
-            </div>
+
+            {selectedCategory ? (
+              <div className="flex flex-wrap gap-2">
+                {availableSizes.map((size) => {
+                  const isSelected = selectedSizes.includes(size);
+                  return (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => toggleSize(size)}
+                      className={`min-w-[48px] px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+                        isSelected
+                          ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/30"
+                          : "bg-white/5 text-slate-400 border border-white/10 hover:text-white hover:bg-white/10"
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500">
+                ابتدا دسته‌بندی را انتخاب کنید تا سایزهای مناسب نمایش داده شود
+              </p>
+            )}
+
+            {/* امکان اضافه کردن سایز دلخواه */}
+            {selectedCategory && (
+              <div className="mt-3">
+                <input
+                  type="text"
+                  placeholder="سایز دلخواه اضافه کنید و Enter بزنید"
+                  className={inputClass}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      const value = (e.target as HTMLInputElement).value.trim();
+                      if (value && !selectedSizes.includes(value)) {
+                        const next = [...selectedSizes, value];
+                        setValue("sizes", next.join(", "), {
+                          shouldValidate: true,
+                        });
+                        (e.target as HTMLInputElement).value = "";
+                      }
+                    }
+                  }}
+                />
+                <p className="text-[11px] text-slate-500 mt-1.5">
+                  سایزهای پیش‌فرض بر اساس دسته‌بندی نمایش داده می‌شوند • برای
+                  اضافه کردن سایز جدید Enter بزنید
+                </p>
+              </div>
+            )}
+
             <input
               type="hidden"
               {...register("sizes", {
