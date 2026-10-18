@@ -415,30 +415,54 @@ export default function ProductsList() {
                 />
               </div>
 
-              {/* سایزها */}
+              {/* سایزها - مخصوص خود محصول */}
               <div>
                 <label className="block text-xs text-slate-400 mb-1.5">
                   سایزها
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {SIZE_OPTIONS.map((size) => {
-                    const isSelected = editData.sizes.includes(size);
-                    return (
-                      <button
-                        key={size}
-                        type="button"
-                        onClick={() => toggleSize(size)}
-                        className={`min-w-[44px] px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                          isSelected
-                            ? "bg-indigo-500 text-white"
-                            : "bg-white/5 text-slate-400 border border-white/10"
-                        }`}
-                      >
-                        {size}
-                      </button>
-                    );
-                  })}
+                  {editData.sizes.map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => toggleSize(size)}
+                      className="min-w-[44px] px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all bg-indigo-500 text-white"
+                    >
+                      {size}
+                    </button>
+                  ))}
                 </div>
+
+                {/* اضافه کردن سایز جدید */}
+                <div className="flex gap-2 mt-3">
+                  <input
+                    type="text"
+                    placeholder="سایز جدید (مثلاً 42 یا XL)"
+                    className={inputClass}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        const value = (
+                          e.target as HTMLInputElement
+                        ).value.trim();
+                        if (
+                          value &&
+                          editData &&
+                          !editData.sizes.includes(value)
+                        ) {
+                          setEditData({
+                            ...editData,
+                            sizes: [...editData.sizes, value],
+                          });
+                          (e.target as HTMLInputElement).value = "";
+                        }
+                      }
+                    }}
+                  />
+                </div>
+                <p className="text-[11px] text-slate-500 mt-1.5">
+                  برای حذف روی سایز کلیک کنید • برای اضافه کردن Enter بزنید
+                </p>
               </div>
 
               {/* رنگ‌ها (نمایش) */}
