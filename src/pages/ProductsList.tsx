@@ -19,8 +19,6 @@ import toast from "react-hot-toast";
 
 type CategoryFilter = "all" | string;
 
-const SIZE_OPTIONS = ["M", "L", "XL", "2XL", "3XL"];
-
 export default function ProductsList() {
   const { data: products, isLoading, isError, error } = useProducts();
   const deleteProductMutation = useDeleteProduct();
