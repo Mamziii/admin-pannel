@@ -268,249 +268,252 @@ export default function ProductsList() {
       </div>
 
       {/* ========== Modal جزئیات و ویرایش ========== */}
-      {selectedProduct && editData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-            onClick={() => setSelectedProduct(null)}
-          />
+{selectedProduct && editData && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6">
+    <div
+      className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+      onClick={() => setSelectedProduct(null)}
+    />
 
-          <div className="relative w-full max-w-md bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden max-h-[95vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-5 border-b border-white/10 sticky top-0 bg-slate-900 z-10">
-              <h3 className="font-bold text-white">جزئیات و ویرایش محصول</h3>
-              <button
-                onClick={() => setSelectedProduct(null)}
-                className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-slate-400"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+    <div className="relative w-full max-w-3xl bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 shrink-0">
+        <h3 className="font-bold text-white">جزئیات و ویرایش محصول</h3>
+        <button
+          onClick={() => setSelectedProduct(null)}
+          className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-slate-400"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
 
-            <div className="p-5 space-y-4">
+      {/* Body */}
+      <div className="p-5 overflow-y-auto flex-1">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* ستون عکس */}
+          <div className="space-y-3">
+            <div className="w-full aspect-square max-h-[320px] rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
               <img
                 src={editData.mainImage}
                 alt={editData.title}
-                className="w-full h-40 object-cover rounded-xl bg-white/10"
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src =
+                    "data:image/svg+xml," +
+                    encodeURIComponent(
+                      `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect fill="#1e293b" width="200" height="200"/><text x="50%" y="50%" fill="#64748b" text-anchor="middle" dy=".3em" font-size="14">بدون تصویر</text></svg>`
+                    );
+                }}
               />
+            </div>
+            <p className="text-xs text-slate-500 break-all dir-ltr text-left">
+              {editData.mainImage}
+            </p>
+          </div>
 
-              {/* عنوان */}
+          {/* ستون فرم */}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs text-slate-400 mb-1.5">عنوان</label>
+              <input
+                type="text"
+                value={editData.title}
+                onChange={(e) =>
+                  setEditData({ ...editData, title: e.target.value })
+                }
+                className={inputClass}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs text-slate-400 mb-1.5">
+                دسته‌بندی
+              </label>
+              <input
+                type="text"
+                value={editData.category}
+                onChange={(e) =>
+                  setEditData({ ...editData, category: e.target.value })
+                }
+                className={inputClass}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs text-slate-400 mb-1.5">
-                  عنوان
+                  قیمت (تومان)
                 </label>
                 <input
-                  type="text"
-                  value={editData.title}
+                  type="number"
+                  value={editData.price}
                   onChange={(e) =>
-                    setEditData({ ...editData, title: e.target.value })
+                    setEditData({
+                      ...editData,
+                      price: Number(e.target.value),
+                    })
                   }
                   className={inputClass}
                 />
               </div>
-
-              {/* دسته‌بندی */}
               <div>
                 <label className="block text-xs text-slate-400 mb-1.5">
-                  دسته‌بندی
+                  موجودی
                 </label>
                 <input
-                  type="text"
-                  value={editData.category}
+                  type="number"
+                  value={editData.quantity}
                   onChange={(e) =>
-                    setEditData({ ...editData, category: e.target.value })
+                    setEditData({
+                      ...editData,
+                      quantity: Number(e.target.value),
+                    })
                   }
                   className={inputClass}
                 />
               </div>
+            </div>
 
-              {/* قیمت و موجودی */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs text-slate-400 mb-1.5">
-                    قیمت (تومان)
-                  </label>
-                  <input
-                    type="number"
-                    value={editData.price}
-                    onChange={(e) =>
-                      setEditData({
-                        ...editData,
-                        price: Number(e.target.value),
-                      })
-                    }
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-slate-400 mb-1.5">
-                    موجودی
-                  </label>
-                  <input
-                    type="number"
-                    value={editData.quantity}
-                    onChange={(e) =>
-                      setEditData({
-                        ...editData,
-                        quantity: Number(e.target.value),
-                      })
-                    }
-                    className={inputClass}
-                  />
-                </div>
-              </div>
-
-              {/* امتیاز و تخفیف */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs text-slate-400 mb-1.5">
-                    امتیاز
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    max="5"
-                    value={editData.rate}
-                    onChange={(e) =>
-                      setEditData({
-                        ...editData,
-                        rate: Number(e.target.value),
-                      })
-                    }
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-slate-400 mb-1.5">
-                    تخفیف (%)
-                  </label>
-                  <input
-                    type="number"
-                    value={editData.discount}
-                    onChange={(e) =>
-                      setEditData({
-                        ...editData,
-                        discount: Number(e.target.value),
-                      })
-                    }
-                    className={inputClass}
-                  />
-                </div>
-              </div>
-
-              {/* توضیحات */}
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs text-slate-400 mb-1.5">
-                  توضیحات
+                  امتیاز
                 </label>
-                <textarea
-                  rows={3}
-                  value={editData.desc}
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="5"
+                  value={editData.rate}
                   onChange={(e) =>
-                    setEditData({ ...editData, desc: e.target.value })
+                    setEditData({
+                      ...editData,
+                      rate: Number(e.target.value),
+                    })
                   }
-                  className={`${inputClass} resize-none`}
+                  className={inputClass}
                 />
               </div>
-
-              {/* سایزها - مخصوص خود محصول */}
               <div>
                 <label className="block text-xs text-slate-400 mb-1.5">
-                  سایزها
+                  تخفیف (%)
                 </label>
-                <div className="flex flex-wrap gap-2">
-                  {editData.sizes.map((size) => (
-                    <button
-                      key={size}
-                      type="button"
-                      onClick={() => toggleSize(size)}
-                      className="min-w-[44px] px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all bg-indigo-500 text-white"
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-
-                {/* اضافه کردن سایز جدید */}
-                <div className="flex gap-2 mt-3">
-                  <input
-                    type="text"
-                    placeholder="سایز جدید (مثلاً 42 یا XL)"
-                    className={inputClass}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        const value = (
-                          e.target as HTMLInputElement
-                        ).value.trim();
-                        if (
-                          value &&
-                          editData &&
-                          !editData.sizes.includes(value)
-                        ) {
-                          setEditData({
-                            ...editData,
-                            sizes: [...editData.sizes, value],
-                          });
-                          (e.target as HTMLInputElement).value = "";
-                        }
-                      }
-                    }}
-                  />
-                </div>
-                <p className="text-[11px] text-slate-500 mt-1.5">
-                  برای حذف روی سایز کلیک کنید • برای اضافه کردن Enter بزنید
-                </p>
+                <input
+                  type="number"
+                  value={editData.discount}
+                  onChange={(e) =>
+                    setEditData({
+                      ...editData,
+                      discount: Number(e.target.value),
+                    })
+                  }
+                  className={inputClass}
+                />
               </div>
+            </div>
 
-              {/* رنگ‌ها (نمایش) */}
-              <div>
-                <label className="block text-xs text-slate-400 mb-1.5">
-                  رنگ‌ها
-                </label>
-                <div className="flex gap-2">
-                  {editData.colors.map((color, i) => (
-                    <div
-                      key={i}
-                      className="w-6 h-6 rounded-full border border-white/20"
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* دکمه‌ها */}
-              <div className="flex flex-col gap-2 pt-2">
-                <button
-                  onClick={handleSave}
-                  disabled={updateProductMutation.isPending}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 text-white text-sm font-medium hover:from-indigo-400 hover:to-violet-500 transition-all disabled:opacity-60"
-                >
-                  {updateProductMutation.isPending ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      در حال ذخیره...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4" />
-                      ذخیره تغییرات
-                    </>
-                  )}
-                </button>
-
-                <button
-                  onClick={() => setProductToDelete(selectedProduct)}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-red-500/15 text-red-400 hover:bg-red-500/25 transition-colors text-sm font-medium"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  حذف این محصول
-                </button>
-              </div>
+            <div>
+              <label className="block text-xs text-slate-400 mb-1.5">
+                توضیحات
+              </label>
+              <textarea
+                rows={3}
+                value={editData.desc}
+                onChange={(e) =>
+                  setEditData({ ...editData, desc: e.target.value })
+                }
+                className={`${inputClass} resize-none`}
+              />
             </div>
           </div>
         </div>
-      )}
+
+        {/* سایز و رنگ زیر دو ستون */}
+        <div className="mt-6 space-y-4">
+          <div>
+            <label className="block text-xs text-slate-400 mb-1.5">سایزها</label>
+            <div className="flex flex-wrap gap-2">
+              {editData.sizes.map((size) => (
+                <button
+                  key={size}
+                  type="button"
+                  onClick={() => toggleSize(size)}
+                  className="min-w-[44px] px-2.5 py-1.5 rounded-lg text-xs font-medium bg-indigo-500 text-white"
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
+            <input
+              type="text"
+              placeholder="سایز جدید (مثلاً 42 یا XL) + Enter"
+              className={`${inputClass} mt-3`}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  const value = (e.target as HTMLInputElement).value.trim();
+                  if (value && editData && !editData.sizes.includes(value)) {
+                    setEditData({
+                      ...editData,
+                      sizes: [...editData.sizes, value],
+                    });
+                    (e.target as HTMLInputElement).value = "";
+                  }
+                }
+              }}
+            />
+            <p className="text-[11px] text-slate-500 mt-1.5">
+              برای حذف روی سایز کلیک کنید • برای اضافه کردن Enter بزنید
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-xs text-slate-400 mb-1.5">رنگ‌ها</label>
+            <div className="flex flex-wrap gap-2">
+              {editData.colors.map((color, i) => (
+                <div
+                  key={i}
+                  className="w-7 h-7 rounded-full border border-white/20"
+                  style={{ backgroundColor: color }}
+                  title={color}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* دکمه‌ها */}
+        <div className="flex flex-col sm:flex-row gap-2 pt-5">
+          <button
+            onClick={handleSave}
+            disabled={updateProductMutation.isPending}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 text-white text-sm font-medium hover:from-indigo-400 hover:to-violet-500 transition-all disabled:opacity-60"
+          >
+            {updateProductMutation.isPending ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                در حال ذخیره...
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                ذخیره تغییرات
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={() => setProductToDelete(selectedProduct)}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-red-500/15 text-red-400 hover:bg-red-500/25 transition-colors text-sm font-medium"
+          >
+            <Trash2 className="w-4 h-4" />
+            حذف این محصول
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* ========== Modal تأیید حذف ========== */}
       {productToDelete && (
