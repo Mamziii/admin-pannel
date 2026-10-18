@@ -4,15 +4,9 @@ import {
   useAddNewProduct,
   type AddNewProductFormType,
 } from "../hooks/useAddNewProduct";
-import { useUploadImage, useUploadImages } from "../hooks/useUploadImage";
+import { useUploadImage } from "../hooks/useUploadImage";
 import { useProducts } from "../hooks/useProducts";
-import {
-  PlusCircle,
-  Upload,
-  Loader2,
-  Image as ImageIcon,
-  X,
-} from "lucide-react";
+import { PlusCircle, Upload, Loader2, X } from "lucide-react";
 
 const COLOR_OPTIONS = [
   { name: "مشکی", value: "#000000" },
@@ -48,7 +42,6 @@ const SIZE_OPTIONS_BY_CATEGORY: Record<string, string[]> = {
   کمربند: ["110", "115", "120", "125", "130"],
 };
 
-// سایز پیش‌فرض اگر دسته‌بندی جدید باشد
 const DEFAULT_SIZE_OPTIONS = ["M", "L", "XL", "2XL", "3XL"];
 
 export default function AddNewProduct() {
@@ -62,23 +55,19 @@ export default function AddNewProduct() {
   } = useForm<AddNewProductFormType>({ mode: "onChange" });
 
   const [mainImagePreview, setMainImagePreview] = useState<string | null>(null);
-  const [extraImagesPreview, setExtraImagesPreview] = useState<string[]>([]);
   const [isNewCategory, setIsNewCategory] = useState(false);
 
   const { onSubmit, mutation } = useAddNewProduct((values) => {
     reset(values);
     setMainImagePreview(null);
-    setExtraImagesPreview([]);
     setIsNewCategory(false);
   });
 
   const uploadImage = useUploadImage();
-  const uploadImages = useUploadImages();
   const { data: products } = useProducts();
 
-  const isUploading = uploadImage.isPending || uploadImages.isPending;
+  const isUploading = uploadImage.isPending;
 
-  // دسته‌بندی‌های موجود از لیست محصولات
   const categories = useMemo(() => {
     if (!products) return [];
     return Array.from(new Set(products.map((p) => p.category))).filter(Boolean);
@@ -101,38 +90,23 @@ export default function AddNewProduct() {
     return SIZE_OPTIONS_BY_CATEGORY[selectedCategory] || DEFAULT_SIZE_OPTIONS;
   }, [selectedCategory]);
 
-  const handleMainImageUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleMainImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const localUrl = URL.createObjectURL(file);
+    setMainImagePreview(localUrl);
 
     uploadImage.mutate(file, {
       onSuccess: (url) => {
         setValue("mainImage", url, { shouldValidate: true });
         setMainImagePreview(url);
       },
-    });
-  };
-
-  const handleExtraImagesUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const files = e.target.files;
-    if (!files?.length) return;
-
-    uploadImages.mutate(Array.from(files), {
-      onSuccess: (urls) => {
-        setValue("images", urls.join(", "), { shouldValidate: true });
-        setExtraImagesPreview(urls);
+      onError: () => {
+        setMainImagePreview(null);
+        setValue("mainImage", "");
       },
     });
-  };
-
-  const removeExtraImage = (index: number) => {
-    const next = extraImagesPreview.filter((_, i) => i !== index);
-    setExtraImagesPreview(next);
-    setValue("images", next.join(", "));
   };
 
   const toggleColor = (value: string) => {
@@ -179,7 +153,6 @@ export default function AddNewProduct() {
       <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 sm:p-8">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* دسته‌بندی با select */}
             <div>
               <label htmlFor="category" className={labelClass}>
                 دسته‌بندی محصول
@@ -405,7 +378,7 @@ export default function AddNewProduct() {
             )}
           </div>
 
-          {/* سایزها - متناسب با دسته‌بندی */}
+          {/* سایزها */}
           <div>
             <label className={labelClass}>سایزهای محصول</label>
 
@@ -435,7 +408,6 @@ export default function AddNewProduct() {
               </p>
             )}
 
-            {/* امکان اضافه کردن سایز دلخواه */}
             {selectedCategory && (
               <div className="mt-3">
                 <input
@@ -550,53 +522,6 @@ export default function AddNewProduct() {
                 {errors.mainImage.message}
               </p>
             )}
-          </div>
-
-          {/* تصاویر اضافی */}
-          <div>
-            <label className={labelClass}>تصاویر اضافی (چندتایی)</label>
-            <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-white/15 rounded-xl cursor-pointer hover:border-indigo-500/50 hover:bg-white/5 transition-all">
-              <div className="flex flex-col items-center gap-2 text-slate-400">
-                {isUploading ? (
-                  <Loader2 className="w-5 h-5 animate-spin text-indigo-400" />
-                ) : (
-                  <ImageIcon className="w-5 h-5" />
-                )}
-                <span className="text-xs">
-                  {isUploading ? "در حال آپلود..." : "انتخاب چند عکس"}
-                </span>
-              </div>
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleExtraImagesUpload}
-                disabled={isUploading}
-                className="hidden"
-              />
-            </label>
-
-            {extraImagesPreview.length > 0 && (
-              <div className="flex flex-wrap gap-3 mt-4">
-                {extraImagesPreview.map((url, i) => (
-                  <div key={url} className="relative">
-                    <img
-                      src={url}
-                      alt={`پیش‌نمایش ${i + 1}`}
-                      className="w-20 h-20 object-cover rounded-lg border border-white/10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeExtraImage(i)}
-                      className="absolute -top-1.5 -right-1.5 p-0.5 rounded-full bg-red-500 text-white"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <input type="hidden" {...register("images")} />
           </div>
 
           <div className="pt-2">
